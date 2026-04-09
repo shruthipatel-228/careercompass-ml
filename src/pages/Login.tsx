@@ -1,22 +1,25 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { BarChart3, Shield, Users, TrendingUp } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
@@ -24,6 +27,32 @@ export default function Login() {
       navigate("/dashboard");
     } catch (err: any) {
       toast({ title: "Login Failed", description: err.message, variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      await signUp(email, password, fullName);
+      // Auto-assign admin role to the first user (for initial setup)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: existingRoles } = await supabase
+          .from("user_roles")
+          .select("id")
+          .limit(1);
+        // If no roles exist yet, make this user admin
+        if (!existingRoles || existingRoles.length === 0) {
+          await supabase.from("user_roles").insert({ user_id: user.id, role: "admin" as any });
+          toast({ title: "Admin Account Created!", description: "You've been assigned the Admin role as the first user." });
+        }
+      }
+      navigate("/dashboard");
+    } catch (err: any) {
+      toast({ title: "Sign Up Failed", description: err.message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -66,45 +95,100 @@ export default function Login() {
               <BarChart3 className="h-8 w-8 text-primary" />
               <span className="text-2xl font-bold text-foreground">EPP System</span>
             </div>
-            <CardTitle className="text-2xl text-foreground">Welcome Back</CardTitle>
+            <CardTitle className="text-2xl text-foreground">Welcome</CardTitle>
             <CardDescription className="text-muted-foreground">
-              Sign in to access your dashboard
+              Sign in or create a new account
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-foreground">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@company.com"
-                  required
-                  className="bg-background border-input"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-foreground">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  className="bg-background border-input"
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign In"}
-              </Button>
-            </form>
-            <div className="mt-6 p-4 rounded-lg bg-muted">
-              <p className="text-sm font-medium text-muted-foreground mb-2">Demo Credentials:</p>
-              <p className="text-xs text-muted-foreground">Contact your admin for login credentials</p>
-            </div>
+            <Tabs defaultValue="signin" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="signin">Sign In</TabsTrigger>
+                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="signin">
+                <form onSubmit={handleSignIn} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signin-email" className="text-foreground">Email</Label>
+                    <Input
+                      id="signin-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="your@email.com"
+                      required
+                      className="bg-background border-input"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signin-password" className="text-foreground">Password</Label>
+                    <Input
+                      id="signin-password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      className="bg-background border-input"
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Signing in..." : "Sign In"}
+                  </Button>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="signup">
+                <form onSubmit={handleSignUp} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name" className="text-foreground">Full Name</Label>
+                    <Input
+                      id="signup-name"
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="John Doe"
+                      required
+                      className="bg-background border-input"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email" className="text-foreground">Email</Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="your@email.com"
+                      required
+                      className="bg-background border-input"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password" className="text-foreground">Password</Label>
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Min 6 characters"
+                      required
+                      minLength={6}
+                      className="bg-background border-input"
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Creating account..." : "Create Account"}
+                  </Button>
+                </form>
+                <div className="mt-4 p-3 rounded-lg bg-muted">
+                  <p className="text-xs text-muted-foreground">
+                    💡 The first user to sign up will automatically be assigned the <strong>Admin</strong> role with full access.
+                  </p>
+                </div>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>
