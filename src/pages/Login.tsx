@@ -36,20 +36,11 @@ export default function Login() {
     setIsLoading(true);
     try {
       await signUp(email, password, fullName);
-      // Auto-assign admin role to the first user (for initial setup)
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: existingRoles } = await supabase
-          .from("user_roles")
-          .select("id")
-          .limit(1);
-        // If no roles exist yet, make this user admin
-        if (!existingRoles || existingRoles.length === 0) {
-          await supabase.from("user_roles").insert({ user_id: user.id, role: "admin" as any });
-          toast.success("Admin Account Created!", { description: "You've been assigned the Admin role as the first user." });
-        }
-      }
-      navigate("/dashboard");
+      toast.success("Account Created!", { description: "Please sign in with your credentials." });
+      // Switch to sign-in tab after successful signup
+      setEmail("");
+      setPassword("");
+      setFullName("");
     } catch (err: any) {
       toast.error("Sign Up Failed", { description: err.message });
     } finally {
