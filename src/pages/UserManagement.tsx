@@ -39,7 +39,10 @@ export default function UserManagement() {
   // Note: Creating users requires admin. We use signUp which auto-creates via trigger.
   const createUser = useMutation({
     mutationFn: async () => {
-      // Sign up user
+      // Save current session before signup switches it
+      const { data: { session: adminSession } } = await supabase.auth.getSession();
+
+      // Sign up new user (this switches the session!)
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -48,10 +51,20 @@ export default function UserManagement() {
       if (authError) throw authError;
       if (!authData.user) throw new Error("User creation failed");
 
-      // Assign role
-      const { error: roleError } = await supabase.from("user_roles").insert({
-        user_id: authData.user.id,
-        role,
+      const newUserId = authData.user.id;
+
+      // Restore admin session immediately
+      if (adminSession) {
+        await supabase.auth.setSession({
+          access_token: adminSession.access_token,
+          refresh_token: adminSession.refresh_token,
+        });
+      }
+
+      // Now assign role using the secure function (as admin)
+      const { error: roleError } = await supabase.rpc("admin_assign_role", {
+        _user_id: newUserId,
+        _role: role,
       });
       if (roleError) throw roleError;
     },
