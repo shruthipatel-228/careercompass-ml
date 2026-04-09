@@ -148,8 +148,8 @@ export default function UserManagement() {
                 <TableBody>
                   {users.map((u) => (
                     <TableRow key={u.id}>
-                      <TableCell className="font-medium text-foreground">{(u.profiles as any)?.full_name}</TableCell>
-                      <TableCell className="text-muted-foreground">{(u.profiles as any)?.email}</TableCell>
+                      <TableCell className="font-medium text-foreground">{u.profile?.full_name}</TableCell>
+                      <TableCell className="text-muted-foreground">{u.profile?.email}</TableCell>
                       <TableCell><Badge className={roleColor(u.role)}>{u.role.toUpperCase()}</Badge></TableCell>
                       <TableCell className="text-muted-foreground">{new Date(u.created_at).toLocaleDateString()}</TableCell>
                     </TableRow>
