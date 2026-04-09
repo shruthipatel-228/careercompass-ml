@@ -36,8 +36,6 @@ export default function UserManagement() {
       }));
     },
   });
-    },
-  });
 
   // Note: Creating users requires admin. We use signUp which auto-creates via trigger.
   const createUser = useMutation({
