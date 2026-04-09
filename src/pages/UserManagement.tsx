@@ -56,7 +56,7 @@ export default function UserManagement() {
       if (roleError) throw roleError;
     },
     onSuccess: () => {
-      toast({ title: "User created", description: `${fullName} has been registered as ${role}` });
+      toast.success("User created", { description: `${fullName} has been registered as ${role}` });
       queryClient.invalidateQueries({ queryKey: ["user-roles"] });
       setOpen(false);
       setEmail(""); setPassword(""); setFullName(""); setRole("employee");

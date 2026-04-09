@@ -89,7 +89,7 @@ export default function Predictions() {
       return { predictionClass, confidence };
     },
     onSuccess: (result) => {
-      toast({ title: `Prediction: ${result.predictionClass.toUpperCase()}`, description: `Confidence: ${result.confidence.toFixed(1)}%` });
+      toast.success(`Prediction: ${result.predictionClass.toUpperCase()}`, { description: `Confidence: ${result.confidence.toFixed(1)}%` });
       queryClient.invalidateQueries({ queryKey: ["predictions"] });
     },
     onError: (err: any) => toast.error("Error", { description: err.message }),
