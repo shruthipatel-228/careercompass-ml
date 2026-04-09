@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Plus, CheckCircle } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -20,7 +20,6 @@ type TaskStatus = Database["public"]["Enums"]["task_status"];
 
 export default function Tasks() {
   const { user, hasRole } = useAuth();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", assigned_to: "", priority: "medium" as string, due_date: "" });
@@ -71,12 +70,12 @@ export default function Tasks() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast({ title: "Task created successfully" });
+      toast.success("Task created successfully");
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       setOpen(false);
       setForm({ title: "", description: "", assigned_to: "", priority: "medium", due_date: "" });
     },
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    onError: (err: any) => toast.error("Error", { description: err.message }),
   });
 
   const updateStatus = useMutation({
@@ -88,7 +87,7 @@ export default function Tasks() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast({ title: "Task updated" });
+      toast.success("Task updated");
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
   });

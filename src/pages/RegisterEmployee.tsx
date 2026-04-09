@@ -7,11 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { UserPlus } from "lucide-react";
 
 export default function RegisterEmployee() {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState({
@@ -43,11 +42,11 @@ export default function RegisterEmployee() {
         years_of_experience: parseFloat(form.years_of_experience),
       });
       if (error) throw error;
-      toast({ title: "Success", description: "Employee registered successfully" });
+      toast.success("Success", { description: "Employee registered successfully" });
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       setForm({ full_name: "", email: "", department_id: "", job_role: "", working_hours_per_week: "40", training_hours: "0", satisfaction_score: "5", years_of_experience: "0" });
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast.error("Error", { description: err.message });
     } finally {
       setIsLoading(false);
     }

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { BarChart3, Shield, Users, TrendingUp } from "lucide-react";
 
 export default function Login() {
@@ -17,7 +17,6 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +25,7 @@ export default function Login() {
       await signIn(email, password);
       navigate("/dashboard");
     } catch (err: any) {
-      toast({ title: "Login Failed", description: err.message, variant: "destructive" });
+      toast.error("Login Failed", { description: err.message });
     } finally {
       setIsLoading(false);
     }
@@ -47,12 +46,12 @@ export default function Login() {
         // If no roles exist yet, make this user admin
         if (!existingRoles || existingRoles.length === 0) {
           await supabase.from("user_roles").insert({ user_id: user.id, role: "admin" as any });
-          toast({ title: "Admin Account Created!", description: "You've been assigned the Admin role as the first user." });
+          toast.success("Admin Account Created!", { description: "You've been assigned the Admin role as the first user." });
         }
       }
       navigate("/dashboard");
     } catch (err: any) {
-      toast({ title: "Sign Up Failed", description: err.message, variant: "destructive" });
+      toast.error("Sign Up Failed", { description: err.message });
     } finally {
       setIsLoading(false);
     }
