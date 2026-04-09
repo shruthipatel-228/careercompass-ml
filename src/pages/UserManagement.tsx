@@ -24,25 +24,23 @@ export default function UserManagement() {
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState<AppRole>("employee");
 
+  // Fetch all profiles and roles separately, then merge
   const { data: users, isLoading } = useQuery({
-    queryKey: ["user-roles"],
+    queryKey: ["all-users"],
     queryFn: async () => {
-      const { data: roles } = await supabase.from("user_roles").select("*");
       const { data: profiles } = await supabase.from("profiles").select("*");
-      return (roles ?? []).map((r) => ({
-        ...r,
-        profile: profiles?.find((p) => p.user_id === r.user_id),
+      const { data: roles } = await supabase.from("user_roles").select("*");
+      return (profiles ?? []).map((p) => ({
+        ...p,
+        role: roles?.find((r) => r.user_id === p.user_id),
       }));
     },
   });
 
-  // Note: Creating users requires admin. We use signUp which auto-creates via trigger.
   const createUser = useMutation({
     mutationFn: async () => {
-      // Save current session before signup switches it
       const { data: { session: adminSession } } = await supabase.auth.getSession();
 
-      // Sign up new user (this switches the session!)
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -53,7 +51,6 @@ export default function UserManagement() {
 
       const newUserId = authData.user.id;
 
-      // Restore admin session immediately
       if (adminSession) {
         await supabase.auth.setSession({
           access_token: adminSession.access_token,
@@ -61,7 +58,6 @@ export default function UserManagement() {
         });
       }
 
-      // Now assign role using the secure function (as admin)
       const { error: roleError } = await supabase.rpc("admin_assign_role", {
         _user_id: newUserId,
         _role: role,
@@ -70,9 +66,25 @@ export default function UserManagement() {
     },
     onSuccess: () => {
       toast.success("User created", { description: `${fullName} has been registered as ${role}` });
-      queryClient.invalidateQueries({ queryKey: ["user-roles"] });
+      queryClient.invalidateQueries({ queryKey: ["all-users"] });
       setOpen(false);
       setEmail(""); setPassword(""); setFullName(""); setRole("employee");
+    },
+    onError: (err: any) => toast.error("Error", { description: err.message }),
+  });
+
+  // Assign role to an existing user who has no role
+  const assignRole = useMutation({
+    mutationFn: async ({ userId, newRole }: { userId: string; newRole: AppRole }) => {
+      const { error } = await supabase.rpc("admin_assign_role", {
+        _user_id: userId,
+        _role: newRole,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Role assigned successfully");
+      queryClient.invalidateQueries({ queryKey: ["all-users"] });
     },
     onError: (err: any) => toast.error("Error", { description: err.message }),
   });
@@ -139,7 +151,7 @@ export default function UserManagement() {
         <Card className="border-border">
           <CardHeader>
             <CardTitle className="text-foreground flex items-center gap-2">
-              <Shield className="h-5 w-5" /> Registered Users & Roles
+              <Shield className="h-5 w-5" /> All Registered Users
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -154,16 +166,35 @@ export default function UserManagement() {
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
-                    <TableHead>Assigned</TableHead>
+                    <TableHead>Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {users.map((u) => (
                     <TableRow key={u.id}>
-                      <TableCell className="font-medium text-foreground">{u.profile?.full_name}</TableCell>
-                      <TableCell className="text-muted-foreground">{u.profile?.email}</TableCell>
-                      <TableCell><Badge className={roleColor(u.role)}>{u.role.toUpperCase()}</Badge></TableCell>
-                      <TableCell className="text-muted-foreground">{new Date(u.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell className="font-medium text-foreground">{u.full_name}</TableCell>
+                      <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                      <TableCell>
+                        {u.role ? (
+                          <Badge className={roleColor(u.role.role)}>{u.role.role.toUpperCase()}</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-muted-foreground">No Role</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {!u.role && (
+                          <Select onValueChange={(v) => assignRole.mutate({ userId: u.user_id, newRole: v as AppRole })}>
+                            <SelectTrigger className="w-32 h-8 bg-background">
+                              <SelectValue placeholder="Assign role" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="hr">HR</SelectItem>
+                              <SelectItem value="manager">Manager</SelectItem>
+                              <SelectItem value="employee">Employee</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
