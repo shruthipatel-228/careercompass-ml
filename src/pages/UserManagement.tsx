@@ -28,8 +28,14 @@ export default function UserManagement() {
   const { data: users, isLoading } = useQuery({
     queryKey: ["user-roles"],
     queryFn: async () => {
-      const { data } = await supabase.from("user_roles").select("*, profiles!inner(full_name, email)");
-      return data ?? [];
+      const { data: roles } = await supabase.from("user_roles").select("*");
+      const { data: profiles } = await supabase.from("profiles").select("*");
+      return (roles ?? []).map((r) => ({
+        ...r,
+        profile: profiles?.find((p) => p.user_id === r.user_id),
+      }));
+    },
+  });
     },
   });
 
