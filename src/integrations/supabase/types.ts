@@ -14,16 +14,258 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      departments: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      employees: {
+        Row: {
+          created_at: string
+          date_of_joining: string
+          department_id: string | null
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean | null
+          job_role: string
+          manager_id: string | null
+          satisfaction_score: number | null
+          training_hours: number | null
+          updated_at: string
+          user_id: string | null
+          working_hours_per_week: number | null
+          years_of_experience: number | null
+        }
+        Insert: {
+          created_at?: string
+          date_of_joining?: string
+          department_id?: string | null
+          email: string
+          full_name: string
+          id?: string
+          is_active?: boolean | null
+          job_role?: string
+          manager_id?: string | null
+          satisfaction_score?: number | null
+          training_hours?: number | null
+          updated_at?: string
+          user_id?: string | null
+          working_hours_per_week?: number | null
+          years_of_experience?: number | null
+        }
+        Update: {
+          created_at?: string
+          date_of_joining?: string
+          department_id?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean | null
+          job_role?: string
+          manager_id?: string | null
+          satisfaction_score?: number | null
+          training_hours?: number | null
+          updated_at?: string
+          user_id?: string | null
+          working_hours_per_week?: number | null
+          years_of_experience?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_predictions: {
+        Row: {
+          confidence_score: number
+          employee_id: string
+          experience_score: number | null
+          id: string
+          overall_score: number | null
+          predicted_at: string
+          prediction_class: Database["public"]["Enums"]["performance_class"]
+          satisfaction_score: number | null
+          task_completion_score: number | null
+          training_score: number | null
+          working_hours_score: number | null
+        }
+        Insert: {
+          confidence_score: number
+          employee_id: string
+          experience_score?: number | null
+          id?: string
+          overall_score?: number | null
+          predicted_at?: string
+          prediction_class: Database["public"]["Enums"]["performance_class"]
+          satisfaction_score?: number | null
+          task_completion_score?: number | null
+          training_score?: number | null
+          working_hours_score?: number | null
+        }
+        Update: {
+          confidence_score?: number
+          employee_id?: string
+          experience_score?: number | null
+          id?: string
+          overall_score?: number | null
+          predicted_at?: string
+          prediction_class?: Database["public"]["Enums"]["performance_class"]
+          satisfaction_score?: number | null
+          task_completion_score?: number | null
+          training_score?: number | null
+          working_hours_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_predictions_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          assigned_by: string
+          assigned_to: string
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: Database["public"]["Enums"]["task_priority"]
+          status: Database["public"]["Enums"]["task_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_by: string
+          assigned_to: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["task_priority"]
+          status?: Database["public"]["Enums"]["task_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_by?: string
+          assigned_to?: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["task_priority"]
+          status?: Database["public"]["Enums"]["task_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "hr" | "manager" | "employee"
+      performance_class: "good" | "average" | "poor"
+      task_priority: "low" | "medium" | "high" | "critical"
+      task_status: "pending" | "in_progress" | "completed" | "overdue"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +392,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "hr", "manager", "employee"],
+      performance_class: ["good", "average", "poor"],
+      task_priority: ["low", "medium", "high", "critical"],
+      task_status: ["pending", "in_progress", "completed", "overdue"],
+    },
   },
 } as const
