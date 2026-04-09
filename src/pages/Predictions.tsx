@@ -7,11 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { TrendingUp, Brain, RefreshCw } from "lucide-react";
 
 export default function Predictions() {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedEmployee, setSelectedEmployee] = useState("");
 
@@ -93,7 +92,7 @@ export default function Predictions() {
       toast({ title: `Prediction: ${result.predictionClass.toUpperCase()}`, description: `Confidence: ${result.confidence.toFixed(1)}%` });
       queryClient.invalidateQueries({ queryKey: ["predictions"] });
     },
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    onError: (err: any) => toast.error("Error", { description: err.message }),
   });
 
   const predictAll = useMutation({
@@ -104,8 +103,8 @@ export default function Predictions() {
         await predictMutation.mutateAsync(emp.id);
       }
     },
-    onSuccess: () => toast({ title: "All predictions completed" }),
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    onSuccess: () => toast.success("All predictions completed"),
+    onError: (err: any) => toast.error("Error", { description: err.message }),
   });
 
   const predictionColor = (cls: string) => {

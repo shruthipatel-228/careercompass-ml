@@ -9,11 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Plus, Building2 } from "lucide-react";
 
 export default function Departments() {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -33,13 +32,13 @@ export default function Departments() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast({ title: "Department created" });
+      toast.success("Department created");
       queryClient.invalidateQueries({ queryKey: ["departments"] });
       setOpen(false);
       setName("");
       setDescription("");
     },
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    onError: (err: any) => toast.error("Error", { description: err.message }),
   });
 
   return (
