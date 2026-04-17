@@ -152,16 +152,6 @@ export default function Predictions() {
                 {predictAll.isPending ? "Running..." : "Predict All"}
               </Button>
             </div>
-
-            <div className="mt-4 p-4 rounded-lg bg-muted">
-              <p className="text-sm font-medium text-foreground mb-2">ML Algorithm Details:</p>
-              <ul className="text-xs text-muted-foreground space-y-1">
-                <li>• <strong>Features:</strong> Working Hours, Training Hours, Satisfaction Score, Task Completion Rate, Experience</li>
-                <li>• <strong>Weights:</strong> Satisfaction (25%), Task Completion (25%), Training (20%), Working Hours (15%), Experience (15%)</li>
-                <li>• <strong>Classification:</strong> Score ≥70 → Good | 45-69 → Average | &lt;45 → Poor</li>
-                <li>• <strong>Model:</strong> Weighted Decision Tree Classifier with feature importance ranking</li>
-              </ul>
-            </div>
           </CardContent>
         </Card>
 
