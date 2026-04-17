@@ -207,7 +207,7 @@ export default function Tasks() {
                         <TableCell><Badge className={statusColor(task.status)}>{task.status.replace("_", " ")}</Badge></TableCell>
                         <TableCell className="text-muted-foreground">{task.due_date ? new Date(task.due_date).toLocaleDateString() : "—"}</TableCell>
                         <TableCell>
-                          {task.status !== "completed" && (
+                          {isEmployee && task.status !== "completed" ? (
                             <div className="flex gap-1">
                               {task.status === "pending" && (
                                 <Button size="sm" variant="outline" onClick={() => updateStatus.mutate({ id: task.id, status: "in_progress" })}>
@@ -218,6 +218,8 @@ export default function Tasks() {
                                 <CheckCircle className="h-3 w-3 mr-1" /> Complete
                               </Button>
                             </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">View only</span>
                           )}
                         </TableCell>
                       </TableRow>
