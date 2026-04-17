@@ -35,64 +35,20 @@ export default function Predictions() {
 
   const predictMutation = useMutation({
     mutationFn: async (employeeId: string) => {
-      // Get employee data
-      const { data: emp } = await supabase.from("employees").select("*").eq("id", employeeId).single();
-      if (!emp) throw new Error("Employee not found");
-
-      // Get task stats
-      const { data: tasks } = await supabase.from("tasks").select("status").eq("assigned_to", employeeId);
-      const totalTasks = tasks?.length ?? 0;
-      const completedTasks = tasks?.filter((t) => t.status === "completed").length ?? 0;
-      const taskCompletionRate = totalTasks > 0 ? completedTasks / totalTasks : 0;
-
-      // ML Algorithm: Weighted scoring with Decision Tree-like classification
-      const workingHoursScore = Math.min(((emp.working_hours_per_week ?? 40) / 45) * 100, 100);
-      const trainingScore = Math.min(((emp.training_hours ?? 0) / 100) * 100, 100);
-      const satisfactionScore = ((emp.satisfaction_score ?? 5) / 10) * 100;
-      const taskScore = taskCompletionRate * 100;
-      const experienceScore = Math.min(((emp.years_of_experience ?? 0) / 10) * 100, 100);
-
-      // Weighted combination (simulating ML feature importance)
-      const weights = { working: 0.15, training: 0.20, satisfaction: 0.25, task: 0.25, experience: 0.15 };
-      const overallScore = 
-        workingHoursScore * weights.working +
-        trainingScore * weights.training +
-        satisfactionScore * weights.satisfaction +
-        taskScore * weights.task +
-        experienceScore * weights.experience;
-
-      // Classification thresholds (Decision boundary)
-      let predictionClass: "good" | "average" | "poor";
-      if (overallScore >= 70) predictionClass = "good";
-      else if (overallScore >= 45) predictionClass = "average";
-      else predictionClass = "poor";
-
-      // Confidence score based on distance from boundaries
-      let confidence: number;
-      if (overallScore >= 70) confidence = 70 + ((overallScore - 70) / 30) * 30;
-      else if (overallScore >= 45) confidence = 60 + ((overallScore - 45) / 25) * 20;
-      else confidence = 65 + ((45 - overallScore) / 45) * 30;
-      confidence = Math.min(Math.max(confidence, 60), 98);
-
-      const { error } = await supabase.from("performance_predictions").insert({
-        employee_id: employeeId,
-        prediction_class: predictionClass,
-        confidence_score: Math.round(confidence * 100) / 100,
-        working_hours_score: Math.round(workingHoursScore * 100) / 100,
-        training_score: Math.round(trainingScore * 100) / 100,
-        satisfaction_score: Math.round(satisfactionScore * 100) / 100,
-        task_completion_score: Math.round(taskScore * 100) / 100,
-        experience_score: Math.round(experienceScore * 100) / 100,
-        overall_score: Math.round(overallScore * 100) / 100,
+      const { data, error } = await supabase.functions.invoke("predict-performance", {
+        body: { employee_id: employeeId },
       });
       if (error) throw error;
-      return { predictionClass, confidence };
+      if (data?.error) throw new Error(data.error);
+      return data as { prediction_class: string; confidence_score: number; reasoning: string };
     },
     onSuccess: (result) => {
-      toast.success(`Prediction: ${result.predictionClass.toUpperCase()}`, { description: `Confidence: ${result.confidence.toFixed(1)}%` });
+      toast.success(`AI Prediction: ${result.prediction_class.toUpperCase()}`, {
+        description: `${result.reasoning} (Confidence: ${result.confidence_score.toFixed(1)}%)`,
+      });
       queryClient.invalidateQueries({ queryKey: ["predictions"] });
     },
-    onError: (err: any) => toast.error("Error", { description: err.message }),
+    onError: (err: any) => toast.error("Prediction failed", { description: err.message }),
   });
 
   const predictAll = useMutation({
@@ -101,9 +57,11 @@ export default function Predictions() {
       if (!allEmployees?.length) throw new Error("No active employees");
       for (const emp of allEmployees) {
         await predictMutation.mutateAsync(emp.id);
+        // Small delay to avoid rate limits
+        await new Promise((r) => setTimeout(r, 500));
       }
     },
-    onSuccess: () => toast.success("All predictions completed"),
+    onSuccess: () => toast.success("All AI predictions completed"),
     onError: (err: any) => toast.error("Error", { description: err.message }),
   });
 
@@ -121,7 +79,7 @@ export default function Predictions() {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Performance Predictions</h1>
-          <p className="text-muted-foreground">ML-based employee performance classification (Good / Average / Poor)</p>
+          <p className="text-muted-foreground">AI-powered classification using Lovable AI (Google Gemini) — Good / Average / Poor</p>
         </div>
 
         {/* Predict Controls */}
