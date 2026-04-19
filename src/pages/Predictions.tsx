@@ -44,6 +44,7 @@ export default function Predictions() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["predictions"] });
+      toast.success("Prediction saved");
     },
     onError: (err: any) => toast.error("Prediction failed", { description: err.message }),
   });
