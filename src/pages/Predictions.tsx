@@ -77,7 +77,7 @@ export default function Predictions() {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Performance Predictions</h1>
-          <p className="text-muted-foreground">AI-powered classification using Lovable AI (Google Gemini) — Good / Average / Poor</p>
+          <p className="text-muted-foreground"> Good / Average / Poor</p>
         </div>
 
         {/* Predict Controls */}
