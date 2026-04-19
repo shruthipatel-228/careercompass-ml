@@ -42,10 +42,7 @@ export default function Predictions() {
       if (data?.error) throw new Error(data.error);
       return data as { prediction_class: string; confidence_score: number; reasoning: string };
     },
-    onSuccess: (result) => {
-      toast.success(`AI Prediction: ${result.prediction_class.toUpperCase()}`, {
-        description: `${result.reasoning} (Confidence: ${result.confidence_score.toFixed(1)}%)`,
-      });
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["predictions"] });
     },
     onError: (err: any) => toast.error("Prediction failed", { description: err.message }),
